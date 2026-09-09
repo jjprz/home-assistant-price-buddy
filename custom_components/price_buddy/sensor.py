@@ -37,6 +37,7 @@ from .const import (
     ATTR_UNIT_PRICE,
     ATTR_UPDATED_AT,
     DOMAIN,
+    EVENT_PRICE_CHANGED
 )
 from .coordinator import PriceBuddyDataUpdateCoordinator
 
@@ -103,6 +104,51 @@ class PriceBuddyProductSensor(
             entry_type=DeviceEntryType.SERVICE,
             configuration_url=coordinator.client.web_url,
         )
+
+    async def async_added_to_hass(self) -> None:
+        """Store the initial price when the entity is added."""
+        await super().async_added_to_hass()
+        self._last_price = self.native_value
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle coordinator updates and fire an event on price changes."""
+        previous_price = getattr(self, "_last_price", None)
+        current_price = self.native_value
+
+        if (
+            previous_price is not None
+            and current_price is not None
+            and previous_price != current_price
+        ):
+            product = self._product or {}
+            listing = self._best_listing
+
+            self.hass.bus.async_fire(
+                EVENT_PRICE_CHANGED,
+                {
+                    "entity_id": self.entity_id,
+                    "product_id": product.get("id", self._product_id),
+                    "name": self.name,
+                    "old_price": float(previous_price),
+                    "new_price": float(current_price),
+                    "currency": self.native_unit_of_measurement,
+                    "target_price": _number(product.get("notify_price")),
+                    "target_reached": self._target_reached,
+                    "store": listing.get("store_name") if listing else None,
+                    "url": (
+                        absolute_http_url(
+                            self.coordinator.client.web_url,
+                            listing.get("url"),
+                        )
+                        if listing
+                        else None
+                    ),
+                },
+            )
+
+        self._last_price = current_price
+        super()._handle_coordinator_update()
 
     @property
     def _product(self) -> dict[str, Any] | None:

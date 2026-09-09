@@ -38,3 +38,5 @@ ATTR_LAST_SCRAPE_SUCCESSFUL = "last_scrape_successful"
 ATTR_OFFERS = "offers"
 ATTR_UNIT_PRICE = "unit_price"
 ATTR_PRICE_FACTOR = "price_factor"
+
+EVENT_PRICE_CHANGED = "price_buddy_price_changed"
