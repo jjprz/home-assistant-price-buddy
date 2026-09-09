@@ -1,0 +1,65 @@
+{
+  "title": "Price Buddy",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Price Buddy",
+        "description": "Connect to the Price Buddy REST API. The application URL and a URL ending in /api are both accepted.",
+        "data": {
+          "url": "Price Buddy URL",
+          "api_token": "API token",
+          "verify_ssl": "Verify SSL certificate",
+          "scan_interval": "Update interval",
+          "currency": "Currency",
+          "include_details": "Load detailed product data"
+        },
+        "data_description": {
+          "api_token": "Create a token in the Price Buddy user menu and grant permission to list/read products.",
+          "scan_interval": "Minutes between API updates.",
+          "currency": "Three-letter currency code used when detailed store currency is unavailable, for example EUR.",
+          "include_details": "Adds store, stock, URL and trend attributes. This transfers more data because Price Buddy includes price history in its full response."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Update Price Buddy credentials",
+        "description": "Enter a new Price Buddy API token.",
+        "data": {
+          "api_token": "API token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to Price Buddy.",
+      "invalid_auth": "The API token is invalid.",
+      "insufficient_permissions": "The API token cannot list products. Grant it product read/list permission.",
+      "invalid_response": "The server did not return a compatible Price Buddy API response.",
+      "invalid_url": "Enter a valid HTTP or HTTPS URL.",
+      "invalid_currency": "Enter a three-letter currency code, for example EUR.",
+      "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This Price Buddy account is already configured.",
+      "reauth_successful": "The API token was updated successfully."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Price Buddy options",
+        "data": {
+          "scan_interval": "Update interval",
+          "currency": "Currency",
+          "include_details": "Load detailed product data"
+        },
+        "data_description": {
+          "scan_interval": "Minutes between API updates.",
+          "currency": "Three-letter fallback currency code, for example EUR.",
+          "include_details": "Adds store, stock, URL and trend attributes at the cost of a larger API response."
+        }
+      }
+    },
+    "error": {
+      "invalid_currency": "Enter a three-letter currency code, for example EUR."
+    }
+  }
+}

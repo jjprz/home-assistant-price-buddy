@@ -1,0 +1,65 @@
+{
+  "title": "Price Buddy",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectar con Price Buddy",
+        "description": "Conecta Home Assistant con la API REST de Price Buddy. Se acepta tanto la URL de la aplicación como una URL terminada en /api.",
+        "data": {
+          "url": "URL de Price Buddy",
+          "api_token": "Token de la API",
+          "verify_ssl": "Verificar el certificado SSL",
+          "scan_interval": "Intervalo de actualización",
+          "currency": "Moneda",
+          "include_details": "Cargar datos detallados de los productos"
+        },
+        "data_description": {
+          "api_token": "Crea un token en el menú de usuario de Price Buddy y concédele permiso para listar o leer productos.",
+          "scan_interval": "Minutos entre actualizaciones de la API.",
+          "currency": "Código de moneda de tres letras usado cuando no se dispone de la moneda de la tienda; por ejemplo, EUR.",
+          "include_details": "Añade atributos de tienda, stock, URL y tendencia. Transfiere más datos porque Price Buddy incluye el histórico de precios en la respuesta completa."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Actualizar las credenciales de Price Buddy",
+        "description": "Introduce un nuevo token de la API de Price Buddy.",
+        "data": {
+          "api_token": "Token de la API"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No se ha podido conectar con Price Buddy.",
+      "invalid_auth": "El token de la API no es válido.",
+      "insufficient_permissions": "El token no puede listar productos. Concédele permiso de lectura o listado de productos.",
+      "invalid_response": "El servidor no ha devuelto una respuesta compatible con la API de Price Buddy.",
+      "invalid_url": "Introduce una URL HTTP o HTTPS válida.",
+      "invalid_currency": "Introduce un código de moneda de tres letras, por ejemplo EUR.",
+      "unknown": "Se ha producido un error inesperado."
+    },
+    "abort": {
+      "already_configured": "Esta cuenta de Price Buddy ya está configurada.",
+      "reauth_successful": "El token de la API se ha actualizado correctamente."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones de Price Buddy",
+        "data": {
+          "scan_interval": "Intervalo de actualización",
+          "currency": "Moneda",
+          "include_details": "Cargar datos detallados de los productos"
+        },
+        "data_description": {
+          "scan_interval": "Minutos entre actualizaciones de la API.",
+          "currency": "Código de moneda alternativo de tres letras; por ejemplo, EUR.",
+          "include_details": "Añade atributos de tienda, stock, URL y tendencia a cambio de una respuesta de API más grande."
+        }
+      }
+    },
+    "error": {
+      "invalid_currency": "Introduce un código de moneda de tres letras, por ejemplo EUR."
+    }
+  }
+}
