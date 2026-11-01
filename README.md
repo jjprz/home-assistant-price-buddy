@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="custom_components/price_buddy/brand/dark_logo.png">
+    <img src="custom_components/price_buddy/brand/logo.png" alt="Price Buddy" width="420">
+  </picture>
+</p>
+
 # Price Buddy for Home Assistant
 
 **English** · [Español](README.es.md)
