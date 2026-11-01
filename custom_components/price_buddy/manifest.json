@@ -1,11 +1,14 @@
 {
   "domain": "price_buddy",
   "name": "Price Buddy",
-  "codeowners": [],
+  "codeowners": [
+    "@jjprz"
+  ],
   "config_flow": true,
-  "documentation": "https://pricebuddy.jez.me/api.html",
+  "documentation": "https://github.com/jjprz/home-assistant-price-buddy",
   "integration_type": "service",
   "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/jjprz/home-assistant-price-buddy/issues",
   "requirements": [],
   "version": "1.0.0"
 }
