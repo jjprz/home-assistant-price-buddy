@@ -95,6 +95,10 @@ class PriceBuddyProductSensor(
         """Initialize a Price Buddy product sensor."""
         super().__init__(coordinator)
         self._product_id = product_id
+        # Last known availability per listing and scrape. Price Buddy briefly
+        # returns an empty availability while it rebuilds its price cache,
+        # which would otherwise read as "in stock" without a new scrape.
+        self._known_availability: dict[tuple[Any, Any], Any] = {}
         self._attr_unique_id = f"{entry.entry_id}_product_{product_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -235,7 +239,7 @@ class PriceBuddyProductSensor(
                     ATTR_PRODUCT_URL: absolute_http_url(
                         self.coordinator.client.web_url, listing.get("url")
                     ),
-                    ATTR_STOCK_STATUS: _stock_status(listing),
+                    ATTR_STOCK_STATUS: self._listing_stock_status(listing),
                     ATTR_TREND: _enum_value(listing.get("trend")),
                     ATTR_LAST_SCRAPE: listing.get("last_scrape"),
                     ATTR_LAST_SCRAPE_SUCCESSFUL: _bool_or_none(
@@ -264,6 +268,21 @@ class PriceBuddyProductSensor(
             return None
         return current <= target
 
+    def _listing_stock_status(self, listing: Mapping[str, Any]) -> str:
+        """Return the stock status, ignoring empty values from cache rebuilds."""
+        key = (
+            listing.get("url") or listing.get("store_name"),
+            listing.get("last_scrape"),
+        )
+        value = listing.get("availability")
+        if value is None or value == "":
+            remembered = self._known_availability.get(key)
+            if remembered is not None:
+                return _stock_status({"availability": remembered})
+        else:
+            self._known_availability[key] = value
+        return _stock_status(listing)
+
     @property
     def _best_listing(self) -> Mapping[str, Any] | None:
         """Return the currently cheapest in-stock listing when available."""
@@ -278,7 +297,11 @@ class PriceBuddyProductSensor(
         if not listings:
             return None
 
-        in_stock = [item for item in listings if _stock_status(item) == "in_stock"]
+        in_stock = [
+            item
+            for item in listings
+            if self._listing_stock_status(item) == "in_stock"
+        ]
         candidates = in_stock or listings
         return min(candidates, key=_listing_price_sort_key)
 
