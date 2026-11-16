@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import absolute_http_url
@@ -78,7 +79,7 @@ def _natural_id_sort_key(value: str) -> tuple[int, int | str]:
 
 
 class PriceBuddyProductSensor(
-    CoordinatorEntity[PriceBuddyDataUpdateCoordinator], SensorEntity
+    CoordinatorEntity[PriceBuddyDataUpdateCoordinator], SensorEntity, RestoreEntity
 ):
     """Representation of one Price Buddy product."""
 
@@ -99,6 +100,8 @@ class PriceBuddyProductSensor(
         # returns an empty availability while it rebuilds its price cache,
         # which would otherwise read as "in stock" without a new scrape.
         self._known_availability: dict[tuple[Any, Any], Any] = {}
+        # (product URL, store, last scrape, stock status) restored after restart.
+        self._restored_stock: tuple[Any, Any, Any, str] | None = None
         self._attr_unique_id = f"{entry.entry_id}_product_{product_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -113,6 +116,19 @@ class PriceBuddyProductSensor(
         """Store the initial price when the entity is added."""
         await super().async_added_to_hass()
         self._last_price = self.native_value
+        # Seed the stock memory from the state saved before the restart, so an
+        # empty availability right after it is not read as "in stock".
+        if (last_state := await self.async_get_last_state()) is not None:
+            attrs = last_state.attributes
+            status = attrs.get(ATTR_STOCK_STATUS)
+            last_scrape = attrs.get(ATTR_LAST_SCRAPE)
+            if status and last_scrape:
+                self._restored_stock = (
+                    attrs.get(ATTR_PRODUCT_URL),
+                    attrs.get(ATTR_STORE),
+                    last_scrape,
+                    status,
+                )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -279,9 +295,29 @@ class PriceBuddyProductSensor(
             remembered = self._known_availability.get(key)
             if remembered is not None:
                 return _stock_status({"availability": remembered})
+            restored = self._restored_status(listing)
+            if restored is not None:
+                return restored
         else:
             self._known_availability[key] = value
         return _stock_status(listing)
+
+    def _restored_status(self, listing: Mapping[str, Any]) -> str | None:
+        """Return the restored stock status if it belongs to this scrape."""
+        if self._restored_stock is None:
+            return None
+        url, store, last_scrape, status = self._restored_stock
+        if listing.get("last_scrape") != last_scrape:
+            return None
+        listing_url = absolute_http_url(
+            self.coordinator.client.web_url, listing.get("url")
+        )
+        if url is not None and listing_url is not None:
+            if url != listing_url:
+                return None
+        elif store != listing.get("store_name"):
+            return None
+        return status
 
     @property
     def _best_listing(self) -> Mapping[str, Any] | None:
